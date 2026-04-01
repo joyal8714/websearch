@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Search Compare</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .loader {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+      display: none;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loading-text {
+      text-align: center;
+      color: #888;
+      display: none;
+      font-size: 14px;
+    }
+
+    .card {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      display: flex;
+      gap: 15px;
+      align-items: flex-start;
+    }
+
+    .card img {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+
+    .no-image {
+      width: 120px;
+      height: 120px;
+      background: #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    button {
+      padding: 8px 16px;
+      margin-left: 5px;
+      cursor: pointer;
+      border-radius: 4px;
+      border: 1px solid #aaa;
+      background: #f0f0f0;
+    }
+
+    button:hover {
+      background: #ddd;
+    }
+
+    input {
+      padding: 8px;
+      width: 250px;
+      border: 1px solid #aaa;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>Product Search Compare</h2>
+
+  <input type="text" id="query" placeholder="e.g. gold ring under 50000">
+  <button onclick="searchTavily()">Search Tavily</button>
+  <button onclick="searchSerp()">Search SerpAPI</button>
+  <button onclick="searchSerper()">Search Serper</button>
+  <!-- <button onclick="searchGooglePSE()">Search Custom</button> -->
+
+  <div id="loading" class="loader"></div>
+  <p id="loading-text" class="loading-text">Searching across stores... this may take a few seconds</p>
+
+  <h3>Results</h3>
+  <div id="results"></div>
+
+  <script>
+
+    function showLoading() {
+      document.getElementById("loading").style.display = "block"
+      document.getElementById("loading-text").style.display = "block"
+      document.getElementById("results").innerHTML = ""
+    }
+
+    function hideLoading() {
+      document.getElementById("loading").style.display = "none"
+      document.getElementById("loading-text").style.display = "none"
+    }
+
+    async function searchTavily() {
+      let q = document.getElementById("query").value
+      if (!q) return alert("Please enter a search query")
+      showLoading()
+      let res = await fetch(`/search/tavily?query=${encodeURIComponent(q)}`)
+      let data = await res.json()
+      hideLoading()
+      render(data)
+    }
+
+    async function searchSerp() {
+      let q = document.getElementById("query").value
+      if (!q) return alert("Please enter a search query")
+      showLoading()
+      let res = await fetch(`/search/serpapi?query=${encodeURIComponent(q)}`)
+      let data = await res.json()
+      hideLoading()
+      render(data)
+    }
+
+    async function searchGooglePSE() {
+      let q = document.getElementById("query").value
+      if (!q) return alert("Please enter a search query")
+      showLoading()
+      let res = await fetch(`/search/google_pse?query=${encodeURIComponent(q)}`)
+      let data = await res.json()
+      hideLoading()
+      render(data)
+    }
+
+    async function searchSerper() {
+      let q = document.getElementById("query").value
+      if (!q) return alert("Please enter a search query")
+      showLoading()
+      let res = await fetch(`/search/serper?query=${encodeURIComponent(q)}`)
+      let data = await res.json()
+      hideLoading()
+      render(data)
+    }
+
+    function render(data) {
+      let html = `<h4>Source: ${data.source} &nbsp;|&nbsp; ${data.results?.length || 0} results found</h4>`
+
+      if (!data.results || data.results.length === 0) {
+        html += `<p style="color:red;">No results found. Try a broader search term.</p>`
+        document.getElementById("results").innerHTML = html
+        return
+      }
+
+      data.results.forEach(item => {
+        let imageHtml = item.image
+          ? `<img src="${item.image}" alt="product">`
+          : `<div class="no-image">No Image</div>`
+
+        let fields = data.source === "tavily"
+          ? `
+                <b>Store:</b> ${item.store || "N/A"}<br>
+                <b>Price:</b> ${item.price || "N/A"}<br>
+                <span>${(item.content || "").substring(0, 120)}...</span>
+              `
+          : `
+                <b>Store:</b> ${item.store || "N/A"}<br>
+                <b>Price:</b> ${item.price || "N/A"}<br>
+                <b>Rating:</b> ${item.rating || "N/A"}<br>
+                ${data.source === "google_pse" && item.content ? `<span>${item.content.substring(0, 120)}...</span>` : ""}
+              `
+
+        html += `
+        <div class="card">
+            ${imageHtml}
+            <div>
+                <b>${item.title || "Untitled"}</b><br><br>
+                ${fields}
+                <br><a href="${item.link}" target="_blank">View Product →</a>
+            </div>
+        </div>`
+      })
+
+      document.getElementById("results").innerHTML = html
+    }
+  </script>
+
+</body>
+
+</html>
