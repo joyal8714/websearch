@@ -1,0 +1,47 @@
+{
+  "position": 1,
+  "title": "Gold Rings | Tiffany & Co. US",
+  "link": "https://www.tiffany.com/jewelry/rings/gold/",
+  "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.tiffany.com/jewelry/rings/gold/&ved=2ahUKEwitxL3Dv9uTAxVrEFkFHS2mFBsQFnoECBsQAQ",
+  "displayed_link": "https://www.tiffany.com \u203a Jewelry",
+  "favicon": "https://serpapi.com/searches/69d4d7b2db99eccdf7f8e674/images/W6zVMTmNV2uYxEOiBtBOc9WeYWHuHXLu7EC24mB1VGA.png",
+  "snippet": "Our Gold Rings are renowned for their exceptional craftsmanship & timeless style. Discover our iconic diamond rings, signature styles & more.",
+  "snippet_highlighted_words": [
+    "Gold Rings",
+    "for",
+    "diamond rings"
+  ],
+  "rich_snippet": {
+    "bottom": {
+      "detected_extensions": {
+        "price_from": 790,
+        "price_to": 17000,
+        "currency": "$",
+        "rating": 4.3,
+        "reviews": 130
+      },
+      "extensions": [
+        "4.3 store rating (130)",
+        "$790 to $17,000",
+        "Free delivery",
+        "30-day returns"
+      ]
+    }
+  },
+  "about_this_result": {
+    "source": {
+      "description": "Our Gold Rings are renowned for their exceptional craftsmanship & timeless style. Discover our iconic diamond rings, signature styles & more.",
+      "source_info_link": "https://www.tiffany.com/jewelry/rings/gold/",
+      "icon": "https://serpapi.com/searches/69d4d7b2db99eccdf7f8e674/images/W6zVMTmNV2uYxEOiBtBOcwz8uSW1-vICXexpbiJxtHARGs52-Hm-mB_L_KPKDHg6.png"
+    },
+    "languages": [
+      "en"
+    ],
+    "regions": [
+      "US"
+    ]
+  },
+  "about_page_link": "https://www.google.com/search?q=About+https://www.tiffany.com/jewelry/rings/gold/&tbm=ilp",
+  "about_page_serpapi_link": "https://serpapi.com/search.json?engine=google_about_this_result&google_domain=google.com&q=About+https%3A%2F%2Fwww.tiffany.com%2Fjewelry%2Frings%2Fgold%2F",
+  "source": "Tiffany"
+}

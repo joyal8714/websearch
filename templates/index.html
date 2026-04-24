@@ -98,6 +98,7 @@
   <button onclick="searchTavily()">Search Tavily</button>
   <button onclick="searchSerp()">Search SerpAPI</button>
   <button onclick="searchSerper()">Search Serper</button>
+  <button onclick="searchExa()">Search Exa</button>
   <!-- <button onclick="searchGooglePSE()">Search Custom</button> -->
 
   <div id="loading" class="loader"></div>
@@ -158,6 +159,16 @@
       hideLoading()
       render(data)
     }
+    async function searchExa() {
+      let q = document.getElementById("query").value
+      if (!q) return alert("Please enter a search query")
+      showLoading()
+      let res = await fetch(`/search/exa?query=${encodeURIComponent(q)}`)
+      let data = await res.json()
+      hideLoading()
+      render(data)
+    }
+
 
     function render(data) {
       let html = `<h4>Source: ${data.source} &nbsp;|&nbsp; ${data.results?.length || 0} results found</h4>`
@@ -169,8 +180,9 @@
       }
 
       data.results.forEach(item => {
-        let imageHtml = item.image
-          ? `<img src="${item.image}" alt="product">`
+        let proxiedImage = item.image ? `/proxy-image?url=${encodeURIComponent(item.image)}` : null
+        let imageHtml = proxiedImage
+          ? `<img src="${proxiedImage}" alt="product" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="no-image" style="display:none">No Image</div>`
           : `<div class="no-image">No Image</div>`
 
         let fields = data.source === "tavily"

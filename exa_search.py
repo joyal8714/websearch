@@ -1,7 +1,7 @@
 import re
 import requests
 
-TAVILY_API_KEY = "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"
+EXA_API_KEY = "ec7e77cc-7d2e-4122-bd79-2b0f351c1699"
 
 
 ALLOWED_DOMAINS = [
@@ -31,11 +31,6 @@ ALLOWED_DOMAINS = [
     "zales.com", "alexandani.com", "baublebar.com"
 ]
 
-# Broadened Regex: Now catches $, €, £, Rs, and ₹
-PRICE_PATTERN = re.compile(
-    r"(?:Rs\.?|₹|\$|€|£)\s*([\d,]+(?:\.\d{1,2})?)", re.IGNORECASE
-)
-
 STORE_NAMES = {
     "anakhouri": "Ana Khouri",
     "jadetrau": "Jade Trau",
@@ -50,67 +45,94 @@ STORE_NAMES = {
     "doyledoyle": "Doyle & Doyle",
 }
 
-def search_tavily(query: str):
-    url = "https://api.tavily.com/search"
+# Extended price patterns to catch more formats
+PRICE_PATTERN = re.compile(
+    r"(?:"
+    r"USD\s*[\d,]+(?:\.\d{1,2})?|"          # USD 1,234.00
+    r"US\$\s*[\d,]+(?:\.\d{1,2})?|"         # US$ 1,234
+    r"\$\s*[\d,]+(?:\.\d{1,2})?|"           # $1,234.00
+    r"€\s*[\d,]+(?:\.\d{1,2})?|"            # €1,234
+    r"£\s*[\d,]+(?:\.\d{1,2})?|"            # £1,234
+    r"Price[:\s]+[\$€£]?\s*[\d,]+(?:\.\d{1,2})?|"  # Price: $1,234
+    r"[\d,]+(?:\.\d{1,2})?\s*USD"           # 1,234.00 USD
+    r")",
+    re.IGNORECASE
+)
+
+
+def _match_store(link: str):
+    for d in ALLOWED_DOMAINS:
+        if d in link:
+            key = d.replace(".com", "").replace(".net", "")
+            return STORE_NAMES.get(key, key.capitalize())
+    return None
+
+
+def _extract_price(text: str):
+    """Extract and clean price from text."""
+    if not text:
+        return None
+    matches = PRICE_PATTERN.findall(text)
+    for match in matches:
+        # Clean up the match
+        digits = re.sub(r"[^\d,.]", "", match)
+        if digits and len(digits) >= 3:  # avoid single digit false positives
+            return f"${digits}"
+    return None
+
+
+def search_exa(query: str):
+    url = "https://api.exa.ai/search"
+
+    headers = {
+        "x-api-key": EXA_API_KEY,
+        "Content-Type": "application/json",
+    }
 
     payload = {
-        "api_key": TAVILY_API_KEY,
         "query": query,
-        "search_depth": "advanced",
-        "include_images": True,
-        "include_domains": ALLOWED_DOMAINS,
+        "numResults": 10,
+        "includeDomains": ALLOWED_DOMAINS,
+        "type": "neural",
+        "livecrawl": "always",              # ← MUST be top-level, NOT inside contents
+        "contents": {
+            "text": {
+                "maxCharacters": 2000
+            },
+        }
     }
 
     try:
-        response = requests.post(url, json=payload)
-        response.raise_for_status() # Check for API errors
-        data = response.json()
+        resp = requests.post(url, headers=headers, json=payload, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
     except Exception as e:
-        print(f"API Request Failed: {e}")
+        print(f"Exa API error: {e}")
         return []
 
-    # Tavily returns a flat list of images.
-    top_images = data.get("images", [])
     results = []
 
-    for idx, r in enumerate(data.get("results", [])):
-        url_str = r.get("url", "")
-        content = r.get("content", "")
+    for item in data.get("results", []):
+        link = item.get("url", "")
+        store = _match_store(link)
+        if not store:
+            continue
 
-        # Store name with proper display names
-        try:
-            domain = url_str.split("/")[2] if "/" in url_str else "unknown"
-            key = domain.replace("www.", "").split(".")[0]
-            store = STORE_NAMES.get(key, key.capitalize())
-        except (IndexError, AttributeError):
-            store = "unknown"
+        snippet = item.get("text", "")
+        title = item.get("title", "")
 
-        # Image Fallback: Safely try to assign an image from the flat list
-        image = None
-        if idx < len(top_images):
-            image = top_images[idx]
-
-        # Extract Price using the broadened regex
-        price = None
-        if content:
-            # Find price WITH the currency symbol
-            price_with_symbol = re.search(
-                r"((?:Rs\.?|₹|\$|€|£)\s*[\d,]+(?:\.\d{1,2})?)", content, re.IGNORECASE
-            )
-            if price_with_symbol:
-                price = price_with_symbol.group(1).strip()
+        # Try price from full crawled text first, then title
+        price = _extract_price(snippet) or _extract_price(title)
 
         results.append({
-            "title": r.get("title", "Unknown"),
-            "link": url_str,
-            "image": image,
+            "title": title,
+            "link": link,
+            "image": item.get("image"),
             "price": price,
-            "content": content[:200] + "..." if content else "",
+            "rating": None,
             "store": store,
-            "source": "tavily",
+            "content": snippet[:300] if snippet else "",
+            "source": "exa",
         })
 
     return results
-
-# Test the function
-# print(search_tavily("Omega Speedmaster watch price"))
